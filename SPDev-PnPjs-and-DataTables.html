@@ -25,10 +25,10 @@
 <script type="text/javascript">
     async function LoadTaskItems() {
         const list1 = await pnp.sp.web.lists.getById('FE73088E-E843-41BF-B4D8-1114A4A16C92').items.expand('AssignedTo').select('Title,Priority,Status,PercentComplete,StartDate,DueDate,ID,Modified,Created,AssignedTo/ID,AssignedTo/Title,FileDirRef').filter("Status eq 'Not Started'").orderBy('AssignedTo/Title').getAll();
-const list2 = await pnp.sp.web.lists.getById('2C3EE3B9-1A66-4D5F-A907-42859B9D2314').items.expand('AssignedTo').select('Title,Priority,Status,PercentComplete,StartDate,DueDate,ID,Modified,Created,AssignedTo/ID,AssignedTo/Title,FileDirRef').filter("Status eq 'Not Started'").orderBy('AssignedTo/Title').getAll();
-const list3 = await pnp.sp.web.lists.getById('E0A9CC27-5C79-4DA8-B9B2-F53A986FDA96').items.expand('AssignedTo').select('Title,Priority,Status,PercentComplete,StartDate,DueDate,ID,Modified,Created,AssignedTo/ID,AssignedTo/Title,FileDirRef').filter("Status eq 'Not Started'").orderBy('AssignedTo/Title').getAll();
+        const list2 = await pnp.sp.web.lists.getById('2C3EE3B9-1A66-4D5F-A907-42859B9D2314').items.expand('AssignedTo').select('Title,Priority,Status,PercentComplete,StartDate,DueDate,ID,Modified,Created,AssignedTo/ID,AssignedTo/Title,FileDirRef').filter("Status eq 'Not Started'").orderBy('AssignedTo/Title').getAll();
+        const list3 = await pnp.sp.web.lists.getById('E0A9CC27-5C79-4DA8-B9B2-F53A986FDA96').items.expand('AssignedTo').select('Title,Priority,Status,PercentComplete,StartDate,DueDate,ID,Modified,Created,AssignedTo/ID,AssignedTo/Title,FileDirRef').filter("Status eq 'Not Started'").orderBy('AssignedTo/Title').getAll();
+        const dataSet = [...list1, ...list2, ...list3];
         
-const dataSet = [...list1, ...list2, ...list3];
         var collapsedGroups = {};
         var table = $("#TaskTable")
             .DataTable({
