@@ -1,0 +1,128 @@
+<!-- CSS --> 
+   <link href="https://nightly.datatables.net/css/jquery.dataTables.css" rel="stylesheet" type="text/css"/> 
+   <link href="https://cdn.datatables.net/rowgroup/1.0.2/css/rowGroup.dataTables.min.css" rel="stylesheet" type="text/css"/> 
+   <link href="https://cdn.datatables.net/buttons/1.5.1/css/buttons.dataTables.css" rel="stylesheet" type="text/css"/> 
+   <link href="https://site-assets.fontawesome.com/releases/v6.1.2/css/all.css" rel="stylesheet" type="text/css"/> 
+   <style type="text/css">
+    .group-row {
+        font-weight: bold !important;
+        background-color: #e8f5fc !important;
+    }
+   </style> 
+ <!-- Scripts -->
+      <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-1.11.3.min.js"></script> 
+      <script type="text/javascript" charset="utf8" src="https://nightly.datatables.net/js/jquery.dataTables.js"></script> 
+      <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/rowgroup/1.0.2/js/dataTables.rowGroup.min.js"></script> 
+      <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.2.2/js/buttons.html5.js"></script> 
+      <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/pnp-pnpjs/1.3.9/pnpjs.es5.umd.bundle.min.js"></script> 
+      <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script> 
+      <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script> 
+      <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.5.1/js/dataTables.buttons.js"></script> 
+      <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.5.1/js/buttons.colVis.min.js"></script> 
+      <script type="text/javascript" charset="utf8" src="https://site-assets.fontawesome.com/releases/v6.1.2/js/all.js" data-auto-add-css="false" data-auto-replace-svg="false"></script> 
+      <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.3/moment.js"></script> 
+
+<script type="text/javascript">
+    async function LoadTaskItems() {
+        const list1 = await pnp.sp.web.lists.getById('FE73088E-E843-41BF-B4D8-1114A4A16C92').items.expand('AssignedTo').select('Title,Priority,Status,PercentComplete,StartDate,DueDate,ID,Modified,Created,AssignedTo/ID,AssignedTo/Title,FileDirRef').filter("Status eq 'Not Started'").orderBy('AssignedTo/Title').getAll();
+const list2 = await pnp.sp.web.lists.getById('2C3EE3B9-1A66-4D5F-A907-42859B9D2314').items.expand('AssignedTo').select('Title,Priority,Status,PercentComplete,StartDate,DueDate,ID,Modified,Created,AssignedTo/ID,AssignedTo/Title,FileDirRef').filter("Status eq 'Not Started'").orderBy('AssignedTo/Title').getAll();
+const list3 = await pnp.sp.web.lists.getById('E0A9CC27-5C79-4DA8-B9B2-F53A986FDA96').items.expand('AssignedTo').select('Title,Priority,Status,PercentComplete,StartDate,DueDate,ID,Modified,Created,AssignedTo/ID,AssignedTo/Title,FileDirRef').filter("Status eq 'Not Started'").orderBy('AssignedTo/Title').getAll();
+        
+const dataSet = [...list1, ...list2, ...list3];
+        var collapsedGroups = {};
+        var table = $("#TaskTable")
+            .DataTable({
+                "dom": 'Bfrtip',
+                "buttons": [
+                    'csv', 'pdf' //you can add other buttons supported by DataTables here.
+                ],
+                "aaData": dataSet,
+                "processing": true,
+                "autoWidth": true,
+                "bDestroy": true,
+                "aoColumns": [
+                    {
+                        "mData": "Title", "width": "20%", "fnCreatedCell":
+                            function (nTd, sData, oData, iRow, iCol) {
+                                $(nTd).html("<a href='" + oData.FileDirRef + "/DispForm.aspx?ID=" + oData.ID + "' target='_blank'>" + oData.Title + "</a>");
+                            }
+                    },
+                    {
+                        "data": "DueDate", "stype": "date",
+                        "render": function (data, type, row, meta) {
+                            var dtFormat = moment(new Date(data)).format("DD MMM YYYY");
+                            return dtFormat
+                        }
+                    },
+                    {
+                        "data": "AssignedTo.Title"
+
+                    },
+                    {
+                        "data": "Priority"
+                    },
+                    {
+                        "data": "StartDate", "stype": "date",
+                        "render": function (data, type, row, meta) {
+                            var dtFormat = moment(new Date(data)).format("DD MMM YYYY");
+                            return dtFormat
+                        }
+                    },
+                    {
+                        "data": "Status"
+                    }
+                    
+                ],
+                rowGroup: {
+                    dataSrc: 'AssignedTo.Title',
+                    className: 'group-row',
+                    startRender: function (rows, group) {
+                        var collapsed = !!collapsedGroups[group];
+
+                        rows.nodes().each(function (r) {
+                            r.style.display = 'none';
+                            if (collapsed) {
+                                r.style.display = '';
+                            }
+                        });
+
+                        var toggleClass = collapsed ? 'fa-minus-square' : 'fa-plus-square';
+
+                      // Add group name with items count to <tr>
+                        return $('<tr/>')
+                            .append('<td colspan="' + rows.columns()[0].length + '">' + '<span class="fa fa-fw ' + toggleClass + ' toggler"/> ' + group + ' (' + rows.count() + ')</td>')
+                            .attr('data-name', group)
+                            .toggleClass('collapsed', collapsed);
+                    },
+                },
+                "caseInsensitive": false,
+                "searching": true,
+                "pageLength": 100,
+                "ordering": true,
+                "paging": true,
+                "order": [2, "asc"],
+            });
+
+        // Add event listener to handle open and close group
+        $('#TaskTable tbody').on('click', 'tr.group-start', function () {
+            var name = $(this).data('name');
+            collapsedGroups[name] = !collapsedGroups[name];
+            table.draw(false);
+        });
+
+    }
+    LoadTaskItems()
+</script>
+
+<table id="TaskTable" width="100%" cellpadding="0" cellspacing="0" border="0" class="display cell-border">
+    <thead>
+        <tr>
+            <th>Task Name</th>
+            <th>Due Date</th>
+            <th>Assigned To</th>
+            <th>Priority</th>
+            <th>Start Date</th>
+            <th>Task Status</th>
+        </tr>
+    </thead>
+</table>
